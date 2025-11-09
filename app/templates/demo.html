@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPA Permission API - Applications</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .token-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .token-section input {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .token-section button {
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .token-section button:hover {
+            background: #f0f0f0;
+        }
+
+        .token-status {
+            font-size: 0.85rem;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+            min-height: 600px;
+        }
+
+        .applications-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .panel-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error-message {
+            background: #fee;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 4px;
+            color: #721c24;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 4px;
+            color: #155724;
+        }
+
+        .app-list {
+            list-style: none;
+        }
+
+        .app-item {
+            padding: 15px;
+            border-bottom: 1px solid #e1e8ed;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .app-item:hover {
+            background: #f8f9fa;
+            padding-left: 20px;
+        }
+
+        .app-item.active {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+        }
+
+        .app-item:last-child {
+            border-bottom: none;
+        }
+
+        .app-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .app-id {
+            font-size: 0.85rem;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 5px;
+        }
+
+        .app-description {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        .app-permission {
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .app-permission.allowed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .app-permission.denied {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .details-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .details-content {
+            padding: 30px;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .app-details-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e1e8ed;
+        }
+
+        .app-details-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .app-details-id {
+            font-size: 1rem;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
+        }
+
+        .app-details-description {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .role-mappings-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .role-mappings-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .role-mapping-card {
+            background: #f8f9fa;
+            border: 1px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .role-mapping-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .role-mapping-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .role-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .env-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .role-mapping-body {
+            display: grid;
+            gap: 10px;
+        }
+
+        .mapping-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: #666;
+            min-width: 100px;
+        }
+
+        .field-value {
+            color: #333;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        .no-mappings {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 2px dashed #e1e8ed;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.2s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e1e8ed;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .applications-panel {
+                max-height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 OPA Permission API</h1>
+            <p>Applications and Role Mappings Management</p>
+            <div class="token-section">
+                <input type="text" id="auth-token" placeholder="Paste your JWT token here for authentication...">
+                <button onclick="saveToken()">Save Token</button>
+            </div>
+            <div class="token-status" id="token-status"></div>
+        </header>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="showCreateAppModal()">➕ Create Application</button>
+            <button class="btn btn-primary" onclick="showCreateMappingModal()">➕ Create Role Mapping</button>
+            <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+        </div>
+
+        <div class="main-content">
+            <!-- Applications List Panel -->
+            <div class="applications-panel">
+                <div class="panel-header">
+                    Applications
+                </div>
+                <div class="panel-content" id="applications-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading applications...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Details Panel -->
+            <div class="details-panel">
+                <div class="panel-header">
+                    Application Details
+                </div>
+                <div class="details-content" id="details-content">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📱</div>
+                        <h3>Select an Application</h3>
+                        <p>Click on an application from the list to view its details and role mappings</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Application Modal -->
+    <div id="create-app-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create New Application</h2>
+                <button class="close-btn" onclick="closeModal('create-app-modal')">&times;</button>
+            </div>
+            <form onsubmit="createApplication(event)">
+                <div class="form-group">
+                    <label for="app-id">Application ID *</label>
+                    <input type="text" id="app-id" required placeholder="e.g., my-app">
+                </div>
+                <div class="form-group">
+                    <label for="app-name">Application Name *</label>
+                    <input type="text" id="app-name" required placeholder="e.g., My Application">
+                </div>
+                <div class="form-group">
+                    <label for="app-description">Description</label>
+                    <textarea id="app-description" placeholder="Optional description"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('create-app-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Role Mapping Modal -->
+    <div id="create-mapping-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create New Role Mapping</h2>
+                <button class="close-btn" onclick="closeModal('create-mapping-modal')">&times;</button>
+            </div>
+            <form onsubmit="createRoleMapping(event)">
+                <div class="form-group">
+                    <label for="mapping-app-id">Application ID *</label>
+                    <input type="text" id="mapping-app-id" required placeholder="e.g., my-app">
+                </div>
+                <div class="form-group">
+                    <label for="mapping-environment">Environment *</label>
+                    <input type="text" id="mapping-environment" required placeholder="e.g., production, development">
+                </div>
+                <div class="form-group">
+                    <label for="mapping-ad-group">AD Group *</label>
+                    <input type="text" id="mapping-ad-group" required placeholder="e.g., app-admins">
+                </div>
+                <div class="form-group">
+                    <label for="mapping-role">Role *</label>
+                    <input type="text" id="mapping-role" required placeholder="e.g., admin, user, viewer">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('create-mapping-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Role Mapping</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let applications = [];
+        let selectedAppId = null;
+        let authToken = null;
+        let userPermissions = {};
+
+        // Initialize the application
+        async function init() {
+            loadTokenFromStorage();
+            await loadApplications();
+            if (authToken) {
+                await loadUserPermissions();
+            }
+        }
+
+        // Token management
+        function loadTokenFromStorage() {
+            authToken = sessionStorage.getItem('authToken');
+            if (authToken) {
+                document.getElementById('auth-token').value = authToken;
+                updateTokenStatus('Token loaded');
+            }
+        }
+
+        function saveToken() {
+            const tokenInput = document.getElementById('auth-token');
+            authToken = tokenInput.value.trim();
+            
+            if (authToken) {
+                sessionStorage.setItem('authToken', authToken);
+                updateTokenStatus('Token saved successfully');
+                loadUserPermissions();
+            } else {
+                sessionStorage.removeItem('authToken');
+                updateTokenStatus('Token cleared');
+                userPermissions = {};
+                renderApplicationsList();
+            }
+        }
+
+        function updateTokenStatus(message) {
+            const statusEl = document.getElementById('token-status');
+            statusEl.textContent = message;
+            setTimeout(() => {
+                statusEl.textContent = '';
+            }, 3000);
+        }
+
+        // API request helper with auth and comprehensive error handling
+        async function apiRequest(url, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers
+                });
+
+                return response;
+            } catch (error) {
+                // Network error handling
+                throw {
+                    isNetworkError: true,
+                    message: 'Network error: Unable to connect to the server. Please check your connection.',
+                    originalError: error
+                };
+            }
+        }
+
+        // Parse and format error response from API
+        async function parseErrorResponse(response) {
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                errorData = { detail: 'An unexpected error occurred' };
+            }
+
+            const statusMessages = {
+                401: 'Authentication required. Please provide a valid token.',
+                403: 'Access denied. You do not have permission to perform this action.',
+                404: 'Resource not found. The requested item does not exist.',
+                409: 'Conflict. This resource already exists or conflicts with existing data.',
+                500: 'Server error. Please try again later or contact support.',
+                503: 'Service unavailable. The server is temporarily unable to handle the request.'
+            };
+
+            const userFriendlyMessage = statusMessages[response.status] || 'An error occurred while processing your request.';
+            
+            return {
+                status: response.status,
+                statusText: response.statusText,
+                userMessage: userFriendlyMessage,
+                detail: errorData.detail || errorData.error || errorData.message || 'No additional details available',
+                validationErrors: errorData.validation_errors || null
+            };
+        }
+
+        // Display error with proper formatting
+        function displayError(error, containerId = null) {
+            let errorHtml;
+            
+            if (error.isNetworkError) {
+                errorHtml = `
+                    <div class="error-message">
+                        <strong>⚠️ Network Error</strong>
+                        <p>${escapeHtml(error.message)}</p>
+                    </div>
+                `;
+            } else {
+                errorHtml = `
+                    <div class="error-message">
+                        <strong>❌ Error ${error.status ? `(${error.status})` : ''}</strong>
+                        <p>${escapeHtml(error.userMessage)}</p>
+                        ${error.detail ? `<p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;"><strong>Details:</strong> ${escapeHtml(error.detail)}</p>` : ''}
+                        ${error.validationErrors ? `<p style="margin-top: 10px; font-size: 0.9em;"><strong>Validation Errors:</strong></p><ul style="margin-left: 20px;">${error.validationErrors.map(e => `<li>${escapeHtml(e)}</li>`).join('')}</ul>` : ''}
+                    </div>
+                `;
+            }
+
+            if (containerId) {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.innerHTML = errorHtml;
+                }
+            } else {
+                // Show as toast notification
+                showErrorToast(errorHtml);
+            }
+        }
+
+        // Show error toast notification
+        function showErrorToast(errorHtml) {
+            const container = document.querySelector('.container');
+            const errorDiv = document.createElement('div');
+            errorDiv.innerHTML = errorHtml;
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '20px';
+            errorDiv.style.right = '20px';
+            errorDiv.style.zIndex = '2000';
+            errorDiv.style.minWidth = '350px';
+            errorDiv.style.maxWidth = '500px';
+            errorDiv.style.animation = 'slideIn 0.3s';
+            
+            container.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.style.animation = 'fadeOut 0.3s';
+                setTimeout(() => errorDiv.remove(), 300);
+            }, 5000);
+        }
+
+        // Load user permissions for all applications
+        async function loadUserPermissions() {
+            if (!authToken) return;
+
+            try {
+                const response = await apiRequest('/permissions');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    userPermissions = {};
+                    
+                    // Convert array to object for easy lookup
+                    data.forEach(perm => {
+                        userPermissions[perm.application_id] = perm.allowed;
+                    });
+                    
+                    renderApplicationsList();
+                } else {
+                    const error = await parseErrorResponse(response);
+                    console.error('Error loading permissions:', error);
+                    // Don't show error toast for permissions as it's a background operation
+                    // Just log it and continue
+                }
+            } catch (error) {
+                console.error('Error loading permissions:', error);
+                // Don't show error for permissions loading as it's not critical
+            }
+        }
+
+        // Load all applications
+        async function loadApplications() {
+            try {
+                const response = await apiRequest('/applications');
+
+                if (!response.ok) {
+                    const error = await parseErrorResponse(response);
+                    displayError(error, 'applications-list');
+                    return;
+                }
+
+                applications = await response.json();
+                renderApplicationsList();
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                if (error.isNetworkError) {
+                    displayError(error, 'applications-list');
+                } else {
+                    displayError({
+                        userMessage: 'Failed to load applications. Please try again.',
+                        detail: error.message
+                    }, 'applications-list');
+                }
+            }
+        }
+
+        // Render the applications list
+        function renderApplicationsList() {
+            const container = document.getElementById('applications-list');
+
+            if (applications.length === 0) {
+                container.innerHTML = `
+                    <div class="no-mappings">
+                        <p>No applications found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const listHtml = `
+                <ul class="app-list">
+                    ${applications.map(app => {
+                        const hasPermission = userPermissions[app.id];
+                        const permissionBadge = hasPermission !== undefined 
+                            ? `<div class="app-permission ${hasPermission ? 'allowed' : 'denied'}">
+                                ${hasPermission ? '✓ Access Granted' : '✗ Access Denied'}
+                               </div>`
+                            : '';
+                        
+                        return `
+                            <li class="app-item ${selectedAppId === app.id ? 'active' : ''}" 
+                                onclick="selectApplication('${app.id}')">
+                                <div class="app-name">${escapeHtml(app.name)}</div>
+                                <div class="app-id">ID: ${escapeHtml(app.id)}</div>
+                                ${app.description ? `<div class="app-description">${escapeHtml(app.description)}</div>` : ''}
+                                ${permissionBadge}
+                            </li>
+                        `;
+                    }).join('')}
+                </ul>
+            `;
+
+            container.innerHTML = listHtml;
+        }
+
+        // Select an application and load its details
+        async function selectApplication(appId) {
+            selectedAppId = appId;
+            renderApplicationsList(); // Update active state
+
+            const detailsContainer = document.getElementById('details-content');
+            detailsContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading application details...</p>
+                </div>
+            `;
+
+            try {
+                // Load application details and role mappings in parallel
+                const [appResponse, mappingsResponse] = await Promise.all([
+                    apiRequest(`/applications/${appId}`),
+                    apiRequest(`/role-mappings?app_id=${appId}`)
+                ]);
+
+                if (!appResponse.ok) {
+                    const error = await parseErrorResponse(appResponse);
+                    displayError(error, 'details-content');
+                    return;
+                }
+
+                if (!mappingsResponse.ok) {
+                    const error = await parseErrorResponse(mappingsResponse);
+                    displayError(error, 'details-content');
+                    return;
+                }
+
+                const app = await appResponse.json();
+                const mappings = await mappingsResponse.json();
+
+                renderApplicationDetails(app, mappings);
+            } catch (error) {
+                console.error('Error loading application details:', error);
+                if (error.isNetworkError) {
+                    displayError(error, 'details-content');
+                } else {
+                    displayError({
+                        userMessage: 'Failed to load application details. Please try again.',
+                        detail: error.message
+                    }, 'details-content');
+                }
+            }
+        }
+
+        // Render application details and role mappings
+        function renderApplicationDetails(app, mappings) {
+            const container = document.getElementById('details-content');
+            
+            const hasPermission = userPermissions[app.id];
+            const permissionSection = hasPermission !== undefined 
+                ? `<div class="app-permission ${hasPermission ? 'allowed' : 'denied'}" style="margin-top: 10px; font-size: 1rem; padding: 8px 16px;">
+                    ${hasPermission ? '✓ You have access to this application' : '✗ You do not have access to this application'}
+                   </div>`
+                : '';
+
+            const detailsHtml = `
+                <div class="app-details-header">
+                    <h2 class="app-details-title">${escapeHtml(app.name)}</h2>
+                    <div class="app-details-id">Application ID: ${escapeHtml(app.id)}</div>
+                    ${app.description ? `<p class="app-details-description">${escapeHtml(app.description)}</p>` : ''}
+                    ${permissionSection}
+                </div>
+
+                <div class="role-mappings-section">
+                    <h3 class="section-title">
+                        Role Mappings
+                        <span class="badge">${mappings.length}</span>
+                    </h3>
+                    ${renderRoleMappings(mappings)}
+                </div>
+            `;
+
+            container.innerHTML = detailsHtml;
+        }
+
+        // Render role mappings
+        function renderRoleMappings(mappings) {
+            if (mappings.length === 0) {
+                return `
+                    <div class="no-mappings">
+                        <p>No role mappings configured for this application</p>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="role-mappings-grid">
+                    ${mappings.map(mapping => `
+                        <div class="role-mapping-card">
+                            <div class="role-mapping-header">
+                                <span class="role-badge">${escapeHtml(mapping.role)}</span>
+                                <span class="env-badge">${escapeHtml(mapping.environment)}</span>
+                            </div>
+                            <div class="role-mapping-body">
+                                <div class="mapping-field">
+                                    <span class="field-label">AD Group:</span>
+                                    <span class="field-value">${escapeHtml(mapping.ad_group)}</span>
+                                </div>
+                                <div class="mapping-field">
+                                    <span class="field-label">Mapping ID:</span>
+                                    <span class="field-value">${escapeHtml(mapping.id)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Modal functions
+        function showCreateAppModal() {
+            document.getElementById('create-app-modal').classList.add('show');
+        }
+
+        function showCreateMappingModal() {
+            document.getElementById('create-mapping-modal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+            }
+        }
+
+        // Create new application
+        async function createApplication(event) {
+            event.preventDefault();
+
+            const appId = document.getElementById('app-id').value.trim();
+            const appName = document.getElementById('app-name').value.trim();
+            const appDescription = document.getElementById('app-description').value.trim();
+
+            try {
+                const response = await apiRequest('/applications', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id: appId,
+                        name: appName,
+                        description: appDescription
+                    })
+                });
+
+                if (response.ok) {
+                    closeModal('create-app-modal');
+                    showSuccess('Application created successfully!');
+                    
+                    // Clear form
+                    document.getElementById('app-id').value = '';
+                    document.getElementById('app-name').value = '';
+                    document.getElementById('app-description').value = '';
+                    
+                    // Reload applications
+                    await loadApplications();
+                } else {
+                    const error = await parseErrorResponse(response);
+                    displayError(error);
+                }
+            } catch (error) {
+                console.error('Error creating application:', error);
+                if (error.isNetworkError) {
+                    displayError(error);
+                } else {
+                    displayError({
+                        userMessage: 'Failed to create application. Please try again.',
+                        detail: error.message
+                    });
+                }
+            }
+        }
+
+        // Create new role mapping
+        async function createRoleMapping(event) {
+            event.preventDefault();
+
+            const appId = document.getElementById('mapping-app-id').value.trim();
+            const environment = document.getElementById('mapping-environment').value.trim();
+            const adGroup = document.getElementById('mapping-ad-group').value.trim();
+            const role = document.getElementById('mapping-role').value.trim();
+
+            try {
+                const response = await apiRequest('/role-mappings', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        application_id: appId,
+                        environment: environment,
+                        ad_group: adGroup,
+                        role: role
+                    })
+                });
+
+                if (response.ok) {
+                    closeModal('create-mapping-modal');
+                    showSuccess('Role mapping created successfully!');
+                    
+                    // Clear form
+                    document.getElementById('mapping-app-id').value = '';
+                    document.getElementById('mapping-environment').value = '';
+                    document.getElementById('mapping-ad-group').value = '';
+                    document.getElementById('mapping-role').value = '';
+                    
+                    // Reload current application if selected
+                    if (selectedAppId) {
+                        await selectApplication(selectedAppId);
+                    }
+                } else {
+                    const error = await parseErrorResponse(response);
+                    displayError(error);
+                }
+            } catch (error) {
+                console.error('Error creating role mapping:', error);
+                if (error.isNetworkError) {
+                    displayError(error);
+                } else {
+                    displayError({
+                        userMessage: 'Failed to create role mapping. Please try again.',
+                        detail: error.message
+                    });
+                }
+            }
+        }
+
+        // Refresh all data
+        async function refreshData() {
+            await loadApplications();
+            if (authToken) {
+                await loadUserPermissions();
+            }
+            if (selectedAppId) {
+                await selectApplication(selectedAppId);
+            }
+            showSuccess('Data refreshed successfully!');
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const container = document.querySelector('.container');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.innerHTML = `<strong>✓ Success:</strong> ${escapeHtml(message)}`;
+            successDiv.style.position = 'fixed';
+            successDiv.style.top = '20px';
+            successDiv.style.right = '20px';
+            successDiv.style.zIndex = '2000';
+            successDiv.style.minWidth = '300px';
+            successDiv.style.animation = 'slideIn 0.3s';
+            
+            container.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.style.animation = 'fadeOut 0.3s';
+                setTimeout(() => successDiv.remove(), 300);
+            }, 3000);
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

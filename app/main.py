@@ -7,7 +7,7 @@ from datetime import datetime
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 
 from app.config import settings
 from app.database import SessionLocal
@@ -285,13 +285,21 @@ app.include_router(custom_policies.router)
 
 
 # Root endpoint
-@app.get("/", tags=["root"])
+@app.get("/", tags=["root"], response_class=HTMLResponse)
 async def root():
-    """Root endpoint providing API information."""
-    return {
-        "name": settings.api_title,
-        "version": settings.api_version,
-        "description": "OPA Permission API - Dynamic permission management with Open Policy Agent",
-        "health_check": "/health",
-        "documentation": "/docs",
-    }
+    """Serve demo frontend HTML page."""
+    try:
+        # Read the HTML template file
+        with open("app/templates/demo.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        logger.error("Demo HTML template not found at app/templates/demo.html")
+        # Fallback to JSON response if template is not found
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "error": "Template Not Found",
+                "detail": "Demo HTML template is not available",
+            },
+        )
