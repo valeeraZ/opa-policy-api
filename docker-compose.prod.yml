@@ -1,0 +1,52 @@
+# Production override for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+services:
+  # PostgreSQL Database - Production Configuration
+  db:
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-opa_permissions}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Open Policy Agent - Production Configuration
+  opa:
+    command:
+      - "run"
+      - "--server"
+      - "--log-level=error"
+      - "--addr=0.0.0.0:8181"
+    restart: unless-stopped
+
+  # FastAPI Application - Production Configuration
+  api:
+    environment:
+      # Database
+      DATABASE_URL: ${DATABASE_URL}
+      
+      # OPA
+      OPA_URL: http://opa:8181
+      OPA_TIMEOUT: ${OPA_TIMEOUT:-5}
+      
+      # S3 (use real AWS S3 in production)
+      S3_BUCKET: ${S3_BUCKET}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      
+      # API
+      API_TITLE: OPA Permission API
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
+      
+      # Token decoding
+      TOKEN_SECRET_KEY: ${TOKEN_SECRET_KEY}
+      TOKEN_ALGORITHM: ${TOKEN_ALGORITHM:-HS256}
+    restart: unless-stopped
+
+  # Remove LocalStack in production (use real AWS S3)
+  localstack:
+    profiles:
+      - dev
